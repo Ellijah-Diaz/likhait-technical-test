@@ -1,0 +1,20 @@
+# Normalise line endings.
+#
+# Git for Windows enables core.autocrlf=true by default, which rewrites LF to
+# CRLF on checkout. Every shell script in this repository is executed inside a
+# Linux container, where CRLF is fatal: a `#!/bin/bash -e\r` shebang makes the
+# kernel hand bash the argument "-e\r", which aborts with
+#   /bin/bash: -: invalid option
+# so backend/bin/docker-entrypoint never runs and the backend container exits
+# immediately. Pinning the working-tree ending to LF keeps a Windows clone
+# runnable without any local git configuration.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
