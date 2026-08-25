@@ -63,7 +63,7 @@ export function CategoryForm({ onCreated, onCancel }: CategoryFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={formStyle}>
+    <form onSubmit={handleSubmit} style={formStyle} noValidate>
       <TextField
         label="Category name"
         type="text"
