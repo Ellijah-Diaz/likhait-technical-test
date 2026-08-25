@@ -6,12 +6,19 @@ import { useState } from "react";
 import { ExpenseFormData } from "../types";
 import { formatDate } from "../utils/expenseUtils";
 
+export const FUTURE_DATE_MESSAGE =
+  "Date cannot be in the future. An expense can only be recorded for today or an earlier date.";
+
 interface UseExpenseFormProps {
   initialData?: Partial<ExpenseFormData>;
   onSubmit: (data: ExpenseFormData) => Promise<void>;
 }
 
 export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
+  // Today, in the user's own time zone, as YYYY-MM-DD. Doubles as the `max`
+  // attribute for the date input so the picker cannot offer a later day.
+  const maxDate = formatDate(new Date());
+
   const [formData, setFormData] = useState<ExpenseFormData>({
     amount: initialData?.amount || "",
     description: initialData?.description || "",
@@ -20,6 +27,7 @@ export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
   });
 
   const [errors, setErrors] = useState<Partial<ExpenseFormData>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field: keyof ExpenseFormData, value: string) => {
@@ -47,6 +55,9 @@ export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
 
     if (!formData.date) {
       newErrors.date = "Date is required";
+    } else if (formData.date > maxDate) {
+      // Both values are YYYY-MM-DD, which compares correctly as a string.
+      newErrors.date = FUTURE_DATE_MESSAGE;
     }
 
     setErrors(newErrors);
@@ -55,6 +66,8 @@ export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setSubmitError(null);
 
     if (!validateForm()) {
       return;
@@ -72,7 +85,13 @@ export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
       });
       setErrors({});
     } catch (error) {
+      // The API validates independently of this form -- a future date is
+      // rejected server-side too. Show why instead of leaving the dialog open
+      // with no explanation.
       console.error("Form submission error:", error);
+      setSubmitError(
+        error instanceof Error ? error.message : "Something went wrong",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +110,9 @@ export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
   return {
     formData,
     errors,
+    submitError,
     isSubmitting,
+    maxDate,
     handleChange,
     handleSubmit,
     resetForm,

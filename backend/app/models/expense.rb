@@ -1,6 +1,21 @@
 class Expense < ApplicationRecord
   belongs_to :category
 
+  validates :date, presence: true
+
+  # Money cannot have been spent on a day that has not happened yet. The check
+  # lives here as well as in the form because the API is reachable directly,
+  # and `date` is NOT NULL in the schema with no database-level bound.
+  #
+  # `Date.current` resolves in the application time zone, so the boundary is
+  # the server's today, not the browser's.
+  validates :date,
+            comparison: {
+              less_than_or_equal_to: ->(_expense) { Date.current },
+              message: "cannot be in the future"
+            },
+            allow_nil: true
+
   # Newest expense first, by the date the money was actually spent.
   #
   # created_at breaks ties so that an expense recorded today sorts above ones

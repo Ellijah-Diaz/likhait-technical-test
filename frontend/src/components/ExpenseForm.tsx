@@ -6,6 +6,7 @@ import React from "react";
 import { ExpenseFormData } from "../types";
 import { useCategories } from "../contexts/CategoriesContext";
 import { TextField, SelectBox, Button } from "../vibes";
+import { COLORS } from "../constants/colors";
 import { useExpenseForm } from "../hooks/useExpenseForm";
 
 interface ExpenseFormProps {
@@ -21,11 +22,18 @@ export function ExpenseForm({
   onCancel,
   submitLabel = "Add Expense",
 }: ExpenseFormProps) {
-  const { formData, errors, isSubmitting, handleChange, handleSubmit } =
-    useExpenseForm({
-      initialData,
-      onSubmit,
-    });
+  const {
+    formData,
+    errors,
+    submitError,
+    isSubmitting,
+    maxDate,
+    handleChange,
+    handleSubmit,
+  } = useExpenseForm({
+    initialData,
+    onSubmit,
+  });
   const {
     categories,
     isLoading: isLoadingCategories,
@@ -42,6 +50,11 @@ export function ExpenseForm({
     display: "flex",
     gap: "0.5rem",
     marginTop: "0.5rem",
+  };
+
+  const submitErrorStyle: React.CSSProperties = {
+    fontSize: "0.875rem",
+    color: COLORS.danger,
   };
 
   const categoryOptions = categories.map((category) => ({
@@ -89,11 +102,14 @@ export function ExpenseForm({
         label="Date"
         type="date"
         value={formData.date}
+        max={maxDate}
         onChange={(e) => handleChange("date", e.target.value)}
         error={errors.date}
         fullWidth
         required
       />
+
+      {submitError && <div style={submitErrorStyle}>{submitError}</div>}
 
       <div style={buttonGroupStyle}>
         <Button
