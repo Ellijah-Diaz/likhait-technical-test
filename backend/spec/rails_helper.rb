@@ -1,6 +1,11 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
-ENV['RAILS_ENV'] ||= 'test'
+# Force the test environment rather than defaulting to it. docker-compose.yml
+# exports RAILS_ENV=development into the backend container, and `||=` will not
+# override an already-set value, so `bundle exec rspec` silently connected to
+# the seeded development database and every example failed on duplicate keys.
+# Specs must never be able to run against development or production data.
+ENV['RAILS_ENV'] = 'test'
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
