@@ -32,6 +32,15 @@ export function useExpenseForm({ initialData, onSubmit }: UseExpenseFormProps) {
 
   const handleChange = (field: keyof ExpenseFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // Report a future date as soon as it is entered rather than only on
+    // submit: the user should not have to press Add Expense to find out the
+    // date is rejected.
+    if (field === "date" && value && value > maxDate) {
+      setErrors((prev) => ({ ...prev, date: FUTURE_DATE_MESSAGE }));
+      return;
+    }
+
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));

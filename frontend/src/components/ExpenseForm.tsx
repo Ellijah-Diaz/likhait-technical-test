@@ -63,7 +63,11 @@ export function ExpenseForm({
   }));
 
   return (
-    <form onSubmit={handleSubmit} style={formStyle}>
+    // noValidate hands validation to useExpenseForm. Without it the browser's
+    // own constraint validation runs first and silently blocks submit when the
+    // date is outside `max`, so handleSubmit never fires and the explanatory
+    // message below never reaches the user.
+    <form onSubmit={handleSubmit} style={formStyle} noValidate>
       <TextField
         label="Amount"
         type="number"
