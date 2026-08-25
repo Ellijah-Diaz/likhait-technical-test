@@ -15,9 +15,18 @@ RUN apt-get update -qq && \
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 
-# Configure bundler and install gems with retry logic
+# Configure bundler and install gems with retry logic.
+#
+# BUNDLE_PATH is deliberately left at its default (/usr/local/bundle). The
+# official ruby images export BUNDLE_APP_CONFIG=/usr/local/bundle, so a
+# `bundle config set --local path vendor/bundle` here does NOT write
+# /rails/.bundle/config as it appears to -- it writes the image-global
+# config, which docker-compose then carries into the container via the
+# backend_gems volume. Bundler installed into /rails/vendor/bundle, which is
+# bind-mounted from the host, dumping ~125MB of gems into the working tree
+# while leaving /usr/local/bundle/bin (the only bundle bin directory on
+# PATH) empty, so the container died with "sh: 3: rails: not found".
 RUN bundle config set --local deployment 'false' && \
-    bundle config set --local path 'vendor/bundle' && \
     bundle install --jobs 4 --retry 3
 
 # Copy application code
